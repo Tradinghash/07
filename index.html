@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Trading System | BTC/USD</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
+    <style>
+        :root {
+            --primary: #1a237e;
+            --primary-light: #534bae;
+            --secondary: #ffab00;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #2196f3;
+            --dark: #121212;
+            --light: #f5f5f7;
+            --gray: #424242;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c0e2b 0%, #1a1a40 100%);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(26, 35, 126, 0.7);
+            border-radius: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 2, 75, 0.3);
+            border: 1px solid rgba(92, 70, 255, 0.2);
+        }
+        
+        .header-left h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .header-left p {
+            font-size: 1.1rem;
+            color: #bbbbff;
+        }
+        
+        .system-tag {
+            background: linear-gradient(90deg, #5a4bff, #8a7cff);
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: inline-block;
+        }
+        
+        .price-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px 25px;
+            text-align: center;
+            border: 1px solid rgba(92, 70, 255, 0.4);
+        }
+        
+        .price-display .label {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+        
+        .price-display .price {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #ffd700;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .price-display .change {
+            font-size: 0.9rem;
+            color: #4caf50;
+            margin-top: 3px;
+        }
+        
+        .price-display .change.negative {
+            color: #f44336;
+        }
+        
+        /* System Enhancement Tags */
+        .enhancement-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 0 5px;
+            vertical-align: middle;
+        }
+        
+        .tag-ml { background: rgba(156, 39, 176, 0.3); color: #e1bee7; border: 1px solid #7b1fa2; }
+        .tag-vol { background: rgba(255, 152, 0, 0.3); color: #ffe0b2; border: 1px solid #f57c00; }
+        .tag-sent { background: rgba(33, 150, 243, 0.3); color: #bbdefb; border: 1px solid #1976d2; }
+        .tag-rm { background: rgba(76, 175, 80, 0.3); color: #c8e6c9; border: 1px solid #388e3c; }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            background: rgba(26, 35, 126, 0.7);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 2, 75, 0.3);
+            border: 1px solid rgba(92, 70, 255, 0.2);
+        }
+        
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .control-group h3 {
+            margin-bottom: 12px;
+            color: #bbbbff;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .timeframe-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .time-btn {
+            background: rgba(40, 35, 100, 0.7);
+            border: 1px solid rgba(92, 70, 255, 0.3);
+            color: #bbbbff;
+            padding: 10px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 70px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .time-btn:hover {
+            background: rgba(70, 60, 150, 0.7);
+        }
+        
+        .time-btn.active {
+            background: linear-gradient(90deg, #5a4bff, #8a7cff);
+            color: white;
+            border-color: #8a7cff;
+            box-shadow: 0 0 15px rgba(90, 75, 255, 0.5);
+        }
+        
+        .time-btn .label {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .time-btn .desc {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 3px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(26, 35, 126, 0.7);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 2, 75, 0.3);
+            border: 1px solid rgba(92, 70, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(92, 70, 255, 0.3);
+        }
+        
+        .card-header h2 {
+            font-size: 1.5rem;
+            color: #bbbbff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-header .timeframe {
+            background: rgba(90, 75, 255, 0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+        
+        .indicator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .indicator-card {
+            background: rgba(40, 35, 100, 0.5);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(92, 70, 255, 0.3);
+        }
+        
+        .indicator-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+        
+        .indicator-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .indicator-card .status {
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .status-bullish {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+        
+        .status-bearish {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+        
+        .status-neutral {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ff9800;
+        }
+        
+        .signal-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .signal-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid rgba(92, 70, 255, 0.2);
+        }
+        
+        .signal-item:last-child {
+            border-bottom: none;
+        }
+        
+        .signal-type {
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .signal-type.long {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+        
+        .signal-type.short {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+        
+        .signal-time {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .signal-strength {
+            font-weight: 600;
+        }
+        
+        .signal-strength.strong {
+            color: #ffd700;
+        }
+        
+        .signal-strength.medium {
+            color: #ff9800;
+        }
+        
+        .signal-strength.weak {
+            color: #f44336;
+        }
+        
+        .enhancement-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+        
+        .enhancement-section h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .progress-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            height: 20px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .bar-bullish {
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+        }
+        
+        .bar-bearish {
+            background: linear-gradient(90deg, #f44336, #ff5722);
+        }
+        
+        .multi-timeframe-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .timeframe-card {
+            background: rgba(40, 35, 100, 0.4);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid rgba(92, 70, 255, 0.3);
+        }
+        
+        .timeframe-card .label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .timeframe-card .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .timeframe-card .trend {
+            margin-top: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .trend-up {
+            color: #4caf50;
+        }
+        
+        .trend-down {
+            color: #f44336;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 25px;
+            margin-top: 20px;
+            background: rgba(26, 35, 126, 0.7);
+            border-radius: 16px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+            border: 1px solid rgba(92, 70, 255, 0.2);
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1>Enhanced Trading System <span class="enhancement-tag tag-ml">AI Enhanced</span></h1>
+                <p>MACD-TDI-PAC-Heikin-Ashi with Machine Learning & Multi-Timeframe Analysis</p>
+                <div class="system-tag">BTC/USD | Real-time Signals</div>
+            </div>
+            <div class="price-display">
+                <div class="label">BTC/USD PRICE</div>
+                <div class="price">$63,428.75</div>
+                <div class="change">+2.35% (24h)</div>
+            </div>
+        </header>
+        
+        <div class="controls">
+            <div class="control-group">
+                <h3><i class="fas fa-clock"></i> Select Timeframe</h3>
+                <div class="timeframe-buttons">
+                    <div class="time-btn active" data-time="15s">
+                        <span class="label">15s</span>
+                        <span class="desc">Scalping</span>
+                    </div>
+                    <div class="time-btn" data-time="30s">
+                        <span class="label">30s</span>
+                        <span class="desc">Fast Trading</span>
+                    </div>
+                    <div class="time-btn" data-time="1m">
+                        <span class="label">1m</span>
+                        <span class="desc">Intraday</span>
+                    </div>
+                    <div class="time-btn" data-time="5m">
+                        <span class="label">5m</span>
+                        <span class="desc">Swing</span>
+                    </div>
+                    <div class="time-btn" data-time="15m">
+                        <span class="label">15m</span>
+                        <span class="desc">Position</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3><i class="fas fa-microchip"></i> System Enhancements</h3>
+                <div class="timeframe-buttons">
+                    <div class="time-btn active" data-enhance="all">
+                        <span class="label">All Features</span>
+                    </div>
+                    <div class="time-btn" data-enhance="ml">
+                        <span class="label">AI Filter</span>
+                        <span class="enhancement-tag tag-ml">ML</span>
+                    </div>
+                    <div class="time-btn" data-enhance="vol">
+                        <span class="label">Volatility</span>
+                        <span class="enhancement-tag tag-vol">ATR</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard">
+            <!-- Price and Signals Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-line"></i> Price & Signals <span class="enhancement-tag tag-sent">Sentiment</span></h2>
+                    <div class="timeframe">15s</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+                <div class="indicator-grid">
+                    <div class="indicator-card">
+                        <h3>MACD</h3>
+                        <div class="value">+12.4</div>
+                        <div class="status status-bullish">Bullish</div>
+                    </div>
+                    <div class="indicator-card">
+                        <h3>TDI Strength</h3>
+                        <div class="value">78%</div>
+                        <div class="status status-bullish">Strong</div>
+                    </div>
+                    <div class="indicator-card">
+                        <h3>PAC Breakout</h3>
+                        <div class="value">Confirmed</div>
+                        <div class="status status-bullish">Long</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Volatility Analysis Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-bar"></i> Volatility Analysis <span class="enhancement-tag tag-vol">ATR</span></h2>
+                    <div class="timeframe">15s</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="volatilityChart"></canvas>
+                </div>
+                <div class="enhancement-section">
+                    <h3><i class="fas fa-bolt"></i> Volatility-adjusted Position Sizing</h3>
+                    <div class="progress-container">
+                        <div class="progress-bar bar-bullish" style="width: 65%">65% Allocation</div>
+                    </div>
+                    <p>Current ATR: $412 | Recommended Position: 3.2% of portfolio</p>
+                </div>
+            </div>
+            
+            <!-- Machine Learning Prediction Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-robot"></i> ML Prediction <span class="enhancement-tag tag-ml">AI</span></h2>
+                    <div class="timeframe">15s</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="mlChart"></canvas>
+                </div>
+                <div class="enhancement-section">
+                    <h3><i class="fas fa-brain"></i> Prediction Confidence</h3>
+                    <div class="progress-container">
+                        <div class="progress-bar bar-bullish" style="width: 84%">84% Bullish</div>
+                    </div>
+                    <p>Model accuracy: 92% | Next 5 min: +0.8% predicted</p>
+                </div>
+            </div>
+            
+            <!-- Multi-Timeframe Analysis Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-layer-group"></i> Multi-Timeframe Sync <span class="enhancement-tag tag-rm">Risk</span></h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="multiTimeframeChart"></canvas>
+                </div>
+                <div class="multi-timeframe-grid">
+                    <div class="timeframe-card">
+                        <div class="label">15s</div>
+                        <div class="value">LONG</div>
+                        <div class="trend trend-up">Strong</div>
+                    </div>
+                    <div class="timeframe-card">
+                        <div class="label">1m</div>
+                        <div class="value">LONG</div>
+                        <div class="trend trend-up">Medium</div>
+                    </div>
+                    <div class="timeframe-card">
+                        <div class="label">5m</div>
+                        <div class="value">NEUTRAL</div>
+                        <div class="trend">Consolidating</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Signals Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-list"></i> Recent Signals <span class="enhancement-tag tag-sent">Live</span></h2>
+                    <div class="timeframe">15s</div>
+                </div>
+                <div class="signal-list">
+                    <div class="signal-item">
+                        <div>
+                            <span class="signal-type long">LONG</span>
+                            <span class="signal-strength strong">Strong</span>
+                            <span class="enhancement-tag tag-ml">AI Confirmed</span>
+                        </div>
+                        <div class="signal-time">2 min ago</div>
+                    </div>
+                    <div class="signal-item">
+                        <div>
+                            <span class="signal-type short">SHORT</span>
+                            <span class="signal-strength medium">Medium</span>
+                            <span class="enhancement-tag tag-vol">Volatility</span>
+                        </div>
+                        <div class="signal-time">5 min ago</div>
+                    </div>
+                    <div class="signal-item">
+                        <div>
+                            <span class="signal-type long">LONG</span>
+                            <span class="signal-strength strong">Strong</span>
+                        </div>
+                        <div class="signal-time">8 min ago</div>
+                    </div>
+                    <div class="signal-item">
+                        <div>
+                            <span class="signal-type long">LONG</span>
+                            <span class="signal-strength weak">Weak</span>
+                        </div>
+                        <div class="signal-time">12 min ago</div>
+                    </div>
+                    <div class="signal-item">
+                        <div>
+                            <span class="signal-type short">SHORT</span>
+                            <span class="signal-strength strong">Strong</span>
+                        </div>
+                        <div class="signal-time">15 min ago</div>
+                    </div>
+                    <div class="signal-item">
+                        <div>
+                            <span class="signal-type long">LONG</span>
+                            <span class="signal-strength medium">Medium</span>
+                        </div>
+                        <div class="signal-time">18 min ago</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Risk Management Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-shield-alt"></i> Risk Management <span class="enhancement-tag tag-rm">Smart</span></h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="riskChart"></canvas>
+                </div>
+                <div class="enhancement-section">
+                    <h3><i class="fas fa-calculator"></i> Position Calculator</h3>
+                    <div class="indicator-grid">
+                        <div class="indicator-card">
+                            <h3>Stop Loss</h3>
+                            <div class="value">$62,812</div>
+                            <div class="status status-bearish">-1.0%</div>
+                        </div>
+                        <div class="indicator-card">
+                            <h3>Take Profit</h3>
+                            <div class="value">$64,895</div>
+                            <div class="status status-bullish">+2.3%</div>
+                        </div>
+                        <div class="indicator-card">
+                            <h3>Risk/Reward</h3>
+                            <div class="value">1:2.3</div>
+                            <div class="status status-bullish">Optimal</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Enhanced Trading System v3.0 | MACD-TDI-PAC-Heikin-Ashi with AI & Multi-Timeframe Analysis | BTC/USD</p>
+            <p>Real-time simulation | Data updates every 5 seconds | Not financial advice</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize charts when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Generate price data
+            const now = luxon.DateTime.now();
+            const priceData = [];
+            const volatilityData = [];
+            const mlData = [];
+            let currentPrice = 63428.75;
+            
+            for (let i = 100; i >= 0; i--) {
+                const time = now.minus({seconds: i * 5});
+                const change = (Math.random() - 0.5) * 300;
+                currentPrice += change;
+                
+                priceData.push({
+                    x: time.toISO(),
+                    y: currentPrice
+                });
+                
+                // Generate volatility data
+                volatilityData.push({
+                    x: time.toISO(),
+                    y: Math.abs(change) * 1.5 + Math.random() * 100
+                });
+                
+                // Generate ML prediction data
+                mlData.push({
+                    x: time.toISO(),
+                    y: currentPrice + (Math.random() * 600 - 300)
+                });
+            }
+            
+            // Price Chart
+            const priceCtx = document.getElementById('priceChart').getContext('2d');
+            const priceChart = new Chart(priceCtx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'BTC/USD Price',
+                        data: priceData,
+                        borderColor: '#5a4bff',
+                        backgroundColor: 'rgba(90, 75, 255, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 0
+                    }, {
+                        label: 'Buy Signals',
+                        data: [priceData[20], priceData[50], priceData[80]],
+                        pointBackgroundColor: '#4caf50',
+                        pointRadius: 6,
+                        pointStyle: 'triangle',
+                        pointRotation: 180
+                    }, {
+                        label: 'Sell Signals',
+                        data: [priceData[35], priceData[65]],
+                        pointBackgroundColor: '#f44336',
+                        pointRadius: 6,
+                        pointStyle: 'triangle'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'second',
+                                displayFormats: {
+                                    second: 'HH:mm:ss'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(92, 70, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#bbbbff'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(92, 70, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#bbbbff',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#bbbbff'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.datasetIndex === 0) {
+                                        return 'Price: $' + context.parsed.y.toLocaleString();
+                                    }
+                                    return context.datasetIndex === 1 ? 'Buy Signal' : 'Sell Signal';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Volatility Chart
+            const volatilityCtx = document.getElementById('volatilityChart').getContext('2d');
+            const volatilityChart = new Chart(volatilityCtx, {
+                type: 'bar',
+                data: {
+                    datasets: [{
+                        label: 'Volatility (ATR)',
+                        data: volatilityData,
+                        backgroundColor: 'rgba(255, 152, 0, 0.7)',
+                        borderColor: 'rgba(255, 152, 0, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'second'
+                            },
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#bbbbff'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(92, 70, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#bbbbff',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#bbbbff'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // ML Prediction Chart
+            const mlCtx = document.getElementById('mlChart').getContext('2d');
+            const mlChart = new Chart(mlCtx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Actual Price',
+                        data: priceData,
+                        borderColor: '#5a4bff',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 0
+                    }, {
+                        label: 'ML Prediction',
+                        data: mlData,
+                        borderColor: '#9c27b0',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        tension: 0.3,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            grid: {
+                                color: 'rgba(92, 70, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#bbbbff'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(92, 70, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#bbbbff',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#bbbbff'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Multi-Timeframe Chart
+            const multiCtx = document.getElementById('multiTimeframeChart').getContext('2d');
+            const multiChart = new Chart(multiCtx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: '15s',
+                            data: priceData.slice(0, 30),
+                            borderColor: '#4caf50',
+                            borderWidth: 2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '1m',
+                            data: priceData.filter((_, i) => i % 4 === 0).slice(0, 30),
+                            borderColor: '#2196f3',
+                            borderWidth: 2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '5m',
+                            data: priceData.filter((_, i) => i % 20 === 0).slice(0, 30),
+                            borderColor: '#ff9800',
+                            borderWidth: 2,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            grid: {
+                                color: 'rgba(92, 70, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#bbbbff'
+                            }
+                        },
+                        y: {
+                            display: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#bbbbff'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Risk Management Chart
+            const riskCtx = document.getElementById('riskChart').getContext('2d');
+            const riskChart = new Chart(riskCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Max Risk', 'Current Risk', 'Reward Potential'],
+                    datasets: [{
+                        label: 'Risk/Reward Profile',
+                        data: [5, 1.5, 3.5],
+                        backgroundColor: [
+                            'rgba(244, 67, 54, 0.7)',
+                            'rgba(255, 152, 0, 0.7)',
+                            'rgba(76, 175, 80, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(244, 67, 54, 1)',
+                            'rgba(255, 152, 0, 1)',
+                            'rgba(76, 175, 80, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            grid: {
+                                color: 'rgba(92, 70, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#bbbbff',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#bbbbff'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Timeframe buttons
+            const timeButtons = document.querySelectorAll('.time-btn');
+            timeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    timeButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Update all timeframe labels
+                    document.querySelectorAll('.timeframe').forEach(el => {
+                        el.textContent = this.dataset.time;
+                    });
+                    
+                    // Update price display with simulated change
+                    const priceDisplay = document.querySelector('.price');
+                    const changeDisplay = document.querySelector('.change');
+                    const currentPrice = parseFloat(priceDisplay.textContent.replace('$', '').replace(',', ''));
+                    
+                    // Generate random price change based on timeframe
+                    const timeframe = this.dataset.time;
+                    let volatility = 0;
+                    
+                    if (timeframe === '15s') volatility = 150;
+                    else if (timeframe === '30s') volatility = 250;
+                    else if (timeframe === '1m') volatility = 400;
+                    else if (timeframe === '5m') volatility = 800;
+                    else volatility = 1500;
+                    
+                    const change = (Math.random() - 0.5) * volatility;
+                    const newPrice = currentPrice + change;
+                    const percentChange = ((change / currentPrice) * 100).toFixed(2);
+                    
+                    priceDisplay.textContent = '$' + newPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    
+                    changeDisplay.textContent = (change >= 0 ? '+' : '') + percentChange + '% (24h)';
+                    changeDisplay.className = 'change';
+                    if (change < 0) changeDisplay.classList.add('negative');
+                });
+            });
+            
+            // Simulate live price updates
+            setInterval(() => {
+                const priceDisplay = document.querySelector('.price');
+                const changeDisplay = document.querySelector('.change');
+                const currentPrice = parseFloat(priceDisplay.textContent.replace('$', '').replace(',', ''));
+                const change = (Math.random() - 0.5) * 80;
+                const newPrice = currentPrice + change;
+                const percentChange = ((change / currentPrice) * 100).toFixed(2);
+                
+                priceDisplay.textContent = '$' + newPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                
+                changeDisplay.textContent = (change >= 0 ? '+' : '') + percentChange + '% (24h)';
+                changeDisplay.className = 'change';
+                if (change < 0) changeDisplay.classList.add('negative');
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
